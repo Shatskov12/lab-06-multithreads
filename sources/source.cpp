@@ -12,16 +12,18 @@ Hasher::Hasher(int argc, char **argv) {
 
 void Hasher::Start(const bool& key) {
   boost::log::add_common_attributes();
-  boost::log::add_console_log(std::clog, boost::log::keywords::format = "[%Severity%] %TimeStamp%: %Message%");
+  boost::log::add_console_log(std::clog,
+                              boost::log::keywords::format = "[%Severity%] %TimeStamp%: %Message%");
 
   boost::log::add_file_log
       (
           boost::log::keywords::file_name = "sample_%N.log",
           boost::log::keywords::rotation_size = 10 * 1024 * 1024,
-          boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
-          boost::log::keywords::format = "[%Severity%][%TimeStamp%]: %Message%"
-      );
-  for(unsigned int i = 0; i < NumberThreads; ++i){
+          boost::log::keywords::time_based_rotation =
+              boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
+          boost::log::keywords::format = "[%Severity%][%TimeStamp%]: %Message%");
+
+  for (unsigned int i = 0; i < NumberThreads; ++i){
     Threads.emplace_back(std::thread([&](){
       DoHashing(key);
     }));
@@ -30,7 +32,7 @@ void Hasher::Start(const bool& key) {
 
 void Hasher::DoHashing(const bool& key) {
   auto StartTime = std::chrono::steady_clock::now();
-  while(key){
+  while (key){
     Mutex.lock();
     SrcStr = std::to_string(std::rand());
     HashHexStr = picosha2::hash256_hex_string(SrcStr);
@@ -44,8 +46,9 @@ void Hasher::DoHashing(const bool& key) {
 }
 
 void Hasher::SortHash(string &hash) {
-  if(HashHexStr.substr(60, 4) == HexEnd) {
-    BOOST_LOG_SEV(Slg, info) << endl
+  static const string HexEnd = "0000";
+  if (HashHexStr.substr(60, 4) == HexEnd) {
+    BOOST_LOG_SEV(Slg, boost::log::trivial::info) << endl
                              << "source: " << std::hex << std::stol(SrcStr) << std::dec
                              << " hash: " << hash
                              << " duration: " << Duration
@@ -57,7 +60,7 @@ void Hasher::SortHash(string &hash) {
     };
     RightHashs.push_back(j);
   } else {
-    BOOST_LOG_SEV(Slg, trace) << endl
+    BOOST_LOG_SEV(Slg, boost::log::trivial::trace) << endl
                               << "source: " << std::hex << std::stol(SrcStr) << std::dec
                               << " hash: " << HashHexStr
                               << " thread: " << std::this_thread::get_id() << endl;
@@ -65,7 +68,7 @@ void Hasher::SortHash(string &hash) {
 }
 
 Hasher::~Hasher() {
-  for(unsigned int i = 0; i < NumberThreads; ++i) {
+  for (unsigned int i = 0; i < NumberThreads; ++i) {
     Threads[i].join();
   }
 }

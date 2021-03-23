@@ -13,6 +13,7 @@
 //#include <unistd.h>
 #include <fstream>
 #include <sstream>
+//#include <signal.h>
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
@@ -29,10 +30,8 @@ using std::string;
 using std::vector;
 using nlohmann::json;
 using boost::shared_ptr;
-using namespace boost::log::trivial;
 
 
-static const string HexEnd = "0000";
 
 class Hasher {
  public:
@@ -53,9 +52,9 @@ class Hasher {
     OutputFile.open(FileName);
     InputFile.open(FileName);
     json OutJson;
-    if(InputFile.peek() != EOF)
+    if (InputFile.peek() != EOF)
       InputFile >> OutJson;
-    for(auto & RightHash : RightHashs) {
+    for (auto & RightHash : RightHashs) {
       OutJson["values"].push_back(RightHash);
     }
     OutputFile << OutJson.dump(4);
@@ -67,6 +66,7 @@ class Hasher {
   void SortHash(string& hash);
 
   void DoHashing(const bool& key);
+
  private:
   std::mutex Mutex;
   unsigned int NumberThreads;
@@ -75,7 +75,7 @@ class Hasher {
   string HashHexStr;
   vector<std::thread> Threads;
   static vector<json> RightHashs;
-  boost::log::sources::severity_logger< severity_level > Slg;
+  boost::log::sources::severity_logger< boost::log::trivial::severity_level > Slg;
 };
 
 #endif // INCLUDE_HEADER_HPP_
